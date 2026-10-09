@@ -1,0 +1,20 @@
+# .github/workflows/ci.yml: the pipeline (the "glue" between stages)
+name: ci                          # name shown in the GitHub "Actions" tab
+
+on: [push]                        # trigger: run on every push to any branch
+
+jobs:
+  build-test-package:             # one job; a job runs on one fresh machine
+    runs-on: ubuntu-latest        # GitHub gives us a clean Linux VM (a "runner")
+    steps:
+      - uses: actions/checkout@v4         # CODE: download the repo onto the runner
+      - uses: actions/setup-python@v5     # BUILD: install Python on the runner
+        with:
+          python-version: "3.12"          # pin the version so builds are repeatable
+      - run: pip install pytest           # BUILD: install the test tool
+      - run: pytest -q                    # TEST: run all tests; any failure stops the job here
+      - run: zip app.zip app.py           # RELEASE: package the code into an artifact
+      - uses: actions/upload-artifact@v4  # RELEASE: store the artifact so a deploy step can use it
+        with:
+          name: app                       # artifact name shown on the run page
+          path: app.zip                   # which file to upload
